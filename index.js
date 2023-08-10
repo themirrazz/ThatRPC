@@ -2,7 +2,31 @@
     let Dispatcher, lookupAsset, lookupApp, apps = {};
 
     window.UpdateCustomRPC = async x => {
-        msg = x;
+        msg = {
+            activity: {
+                application_id: 1139008064779976845||x.appId,
+                name: x.name,
+                state: x.state,
+                details: x.details,
+                assets: {
+                    large_image: x.largeImage,
+                    small_image: x.smallImage
+                },
+                type: x.type,
+                flags: 0,
+                metadata: {},
+                url: x.url
+            }
+        };
+
+        if(x.buttons) {
+            msg.activity.buttons = [];
+            msg.activity.metadata.button_urls = [];
+            x.buttons.forEach(button => {
+                msg.activity.buttons.push(button.text);
+                msg.activity.metadata.button_urls.push(button.url);
+            });
+        }
 
         if (!Dispatcher) {
             const wpRequire = window.webpackChunkdiscord_app.push([[Symbol()], {}, x => x]);
@@ -47,15 +71,23 @@
             }
         }
 
-        if (msg.activity?.assets?.large_image) msg.activity.assets.large_image = await lookupAsset(msg.activity.application_id, msg.activity.assets.large_image);
-        if (msg.activity?.assets?.small_image) msg.activity.assets.small_image = await lookupAsset(msg.activity.application_id, msg.activity.assets.small_image);
+        if (msg.activity?.assets?.large_image) {
+            if(!msg.activity.assets.large_image.startsWith("https://")) {
+                msg.activity.assets.large_image = await lookupAsset(msg.activity.application_id, msg.activity.assets.large_image);
+            }
+        }
+        if (msg.activity?.assets?.small_image) {
+            if(!msg.activity.assets.small_image.startsWith("https://")) {
+                msg.activity.assets.small_image = await lookupAsset(msg.activity.application_id, msg.activity.assets.small_image);
+            }
+        }
 
         if (msg.activity) {
             const appId = msg.activity.application_id;
-            if (!apps[appId]) apps[appId] = await lookupApp(appId);
+            //if (!apps[appId]) apps[appId] = await lookupApp(appId);
 
-            const app = apps[appId];
-            if (!msg.activity.name) msg.activity.name = app.name;
+            //const app = apps[appId];
+            //if (!msg.activity.name) msg.activity.name = app.name;
         }
 
         Dispatcher.dispatch({ type: "LOCAL_ACTIVITY_UPDATE", ...msg }); // set RPC status
