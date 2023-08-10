@@ -4,7 +4,7 @@
     window.UpdateCustomRPC = async x => {
         msg = {
             activity: {
-                application_id: 1139008064779976845||x.appId,
+                application_id: x.appId,
                 name: x.name,
                 state: x.state,
                 details: x.details,
